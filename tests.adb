@@ -34,25 +34,24 @@ procedure Tests is
       Empty_Data : Dataset;
       Attrs      : Attribute_Set;
       E1, E2, E3 : Boolean := False;
-      Dummy_Tree : Tree := null;
    begin
       Put_Line ("TEST 1 — Empty Dataset Exceptions");
       begin
-         declare E : Metric_Value := Entropy (Empty_Data); begin null; end;
+         declare E : constant Metric_Value := Entropy (Empty_Data); pragma Unreferenced (E); begin null; end;
       exception
          when Empty_Dataset_Error => E1 := True;
       end;
       Check ("1.1 Entropy raises exception on empty dataset", E1);
 
       begin
-         declare IG : Metric_Value := Information_Gain (Empty_Data, 1); begin null; end;
+         declare IG : constant Metric_Value := Information_Gain (Empty_Data, 1); pragma Unreferenced (IG); begin null; end;
       exception
          when Empty_Dataset_Error => E2 := True;
       end;
       Check ("1.2 Information_Gain raises exception on empty dataset", E2);
 
       begin
-         Dummy_Tree := Build_Tree (Empty_Data, Attrs);
+         declare T : constant Tree := Build_Tree (Empty_Data, Attrs); pragma Unreferenced (T); begin null; end;
       exception
          when Empty_Dataset_Error => E3 := True;
       end;
@@ -147,16 +146,18 @@ procedure Tests is
    begin
       Put_Line ("TEST 6 — Invalid Data Integrity Check");
       Data.Append (Bad_Inst);
+      -- Add a second instance of a different class to prevent early `All_Same => True` Leaf return bypass
+      Data.Append (Instance'(Num_Attributes => 1, Attributes => [1 => 2], Class => 1)); 
       
       begin
-         declare IG : Metric_Value := Information_Gain (Data, 2); begin null; end;
+         declare IG : constant Metric_Value := Information_Gain (Data, 2); pragma Unreferenced (IG); begin null; end;
       exception
          when Invalid_Data_Error => E1 := True;
       end;
       Check ("6.1 Info Gain catches out of bounds attribute index", E1);
       
       begin
-         declare GR : Metric_Value := Gain_Ratio (Data, 2); begin null; end;
+         declare GR : constant Metric_Value := Gain_Ratio (Data, 2); pragma Unreferenced (GR); begin null; end;
       exception
          when Invalid_Data_Error => E2 := True;
       end;
@@ -164,7 +165,7 @@ procedure Tests is
       
       begin
          Attrs.Insert (2);
-         declare T : Tree := Build_Tree (Data, Attrs); begin null; end;
+         declare T : constant Tree := Build_Tree (Data, Attrs); pragma Unreferenced (T); begin null; end;
       exception
          when Invalid_Data_Error => E3 := True;
       end;
@@ -233,9 +234,9 @@ procedure Tests is
       Check ("10.1 Pointer is initially null", T_Mem = null);
       Setup_Dataset (Data, Attrs);
       T_Mem := Build_Tree (Data, Attrs);
-      pragma Warnings (Off, "condition is always True");
+      pragma Warnings (Off);
       Check ("10.2 Tree successfully allocated", T_Mem /= null);
-      pragma Warnings (On, "condition is always True");
+      pragma Warnings (On);
       Free_Tree (T_Mem);
       Check ("10.3 Tree fully deallocated and nullified", T_Mem = null);
    end Test_10_Memory;
@@ -259,14 +260,14 @@ procedure Tests is
 
    -- T12
    procedure Test_12_Invalid_Model is
-      Null_T : Tree := null;
+      Null_T : constant Tree := null;
       E1     : Boolean := False;
       Dummy_Inst : constant Instance := (Num_Attributes => 1, Attributes => [1 => 1], Class => 0);
       Leaf_T : Tree := new Tree_Node'(Kind => Leaf, Predicted_Class => 5);
    begin
       Put_Line ("TEST 12 — Invalid Model Evaluation");
       begin
-         declare C : Class_ID := Predict (Null_T, Dummy_Inst); begin null; end;
+         declare C : constant Class_ID := Predict (Null_T, Dummy_Inst); pragma Unreferenced (C); begin null; end;
       exception
          when Prediction_Error => E1 := True;
       end;
@@ -290,7 +291,7 @@ procedure Tests is
       T := Build_Tree (Data, Attrs);
       
       begin
-         declare C : Class_ID := Predict (T, Bad_Inst); begin null; end;
+         declare C : constant Class_ID := Predict (T, Bad_Inst); pragma Unreferenced (C); begin null; end;
       exception
          when Invalid_Data_Error => E1 := True;
       end;
