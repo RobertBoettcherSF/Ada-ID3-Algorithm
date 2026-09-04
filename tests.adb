@@ -23,10 +23,10 @@ procedure Tests is
       Set.Clear;
       Set.Insert (1);
       Set.Insert (2);
-      Data.Append ((Num_Attributes => 2, Attributes => (1 => 1, 2 => 1), Class => 0));
-      Data.Append ((Num_Attributes => 2, Attributes => (1 => 1, 2 => 2), Class => 0));
-      Data.Append ((Num_Attributes => 2, Attributes => (1 => 2, 2 => 1), Class => 1));
-      Data.Append ((Num_Attributes => 2, Attributes => (1 => 2, 2 => 2), Class => 1));
+      Data.Append (Instance'(Num_Attributes => 2, Attributes => [1 => 1, 2 => 1], Class => 0));
+      Data.Append (Instance'(Num_Attributes => 2, Attributes => [1 => 1, 2 => 2], Class => 0));
+      Data.Append (Instance'(Num_Attributes => 2, Attributes => [1 => 2, 2 => 1], Class => 1));
+      Data.Append (Instance'(Num_Attributes => 2, Attributes => [1 => 2, 2 => 2], Class => 1));
    end Setup_Dataset;
 
    -- T1
@@ -40,21 +40,21 @@ procedure Tests is
       begin
          declare E : Metric_Value := Entropy (Empty_Data); begin null; end;
       exception
-         when Empty_Dataset_Error | others => E1 := True;
+         when Empty_Dataset_Error => E1 := True;
       end;
       Check ("1.1 Entropy raises exception on empty dataset", E1);
 
       begin
          declare IG : Metric_Value := Information_Gain (Empty_Data, 1); begin null; end;
       exception
-         when Empty_Dataset_Error | others => E2 := True;
+         when Empty_Dataset_Error => E2 := True;
       end;
       Check ("1.2 Information_Gain raises exception on empty dataset", E2);
 
       begin
          Dummy_Tree := Build_Tree (Empty_Data, Attrs);
       exception
-         when Empty_Dataset_Error | others => E3 := True;
+         when Empty_Dataset_Error => E3 := True;
       end;
       Check ("1.3 Build_Tree raises exception on empty dataset", E3);
    end Test_1_Empty_Dataset;
@@ -67,8 +67,8 @@ procedure Tests is
    begin
       Put_Line ("TEST 2 — Homogeneous Dataset Handling");
       Attrs.Insert (1);
-      Data.Append ((Num_Attributes => 1, Attributes => (1 => 1), Class => 3));
-      Data.Append ((Num_Attributes => 1, Attributes => (1 => 2), Class => 3));
+      Data.Append (Instance'(Num_Attributes => 1, Attributes => [1 => 1], Class => 3));
+      Data.Append (Instance'(Num_Attributes => 1, Attributes => [1 => 2], Class => 3));
       
       Check ("2.1 Entropy of single-class dataset is 0", abs (Entropy (Data)) < 0.001);
       
@@ -99,8 +99,8 @@ procedure Tests is
       Data  : Dataset;
       Attrs : Attribute_Set;
       T     : Tree;
-      Inst1 : constant Instance := (Num_Attributes => 2, Attributes => (1 => 1, 2 => 1), Class => 0);
-      Inst2 : constant Instance := (Num_Attributes => 2, Attributes => (1 => 2, 2 => 2), Class => 1);
+      Inst1 : constant Instance := (Num_Attributes => 2, Attributes => [1 => 1, 2 => 1], Class => 0);
+      Inst2 : constant Instance := (Num_Attributes => 2, Attributes => [1 => 2, 2 => 2], Class => 1);
    begin
       Put_Line ("TEST 4 — Standard Prediction");
       Setup_Dataset (Data, Attrs);
@@ -117,7 +117,7 @@ procedure Tests is
       Data  : Dataset;
       Attrs : Attribute_Set;
       T     : Tree;
-      Inst_Unseen : constant Instance := (Num_Attributes => 2, Attributes => (1 => 99, 2 => 1), Class => 0);
+      Inst_Unseen : constant Instance := (Num_Attributes => 2, Attributes => [1 => 99, 2 => 1], Class => 0);
    begin
       Put_Line ("TEST 5 — Unseen Value Inference");
       Setup_Dataset (Data, Attrs);
@@ -131,7 +131,7 @@ procedure Tests is
       
       -- Even entirely weird combo doesn't crash
       declare
-         Weird : constant Instance := (Num_Attributes => 2, Attributes => (1 => 99, 2 => 99), Class => 0);
+         Weird : constant Instance := (Num_Attributes => 2, Attributes => [1 => 99, 2 => 99], Class => 0);
       begin
          Check ("5.3 Safely handles multiple unseen dimensions", Predict (T, Weird) = 0);
       end;
@@ -142,7 +142,7 @@ procedure Tests is
    procedure Test_6_Missing_Attribute_Errors is
       Data : Dataset;
       Attrs : Attribute_Set;
-      Bad_Inst : constant Instance := (Num_Attributes => 1, Attributes => (1 => 1), Class => 0);
+      Bad_Inst : constant Instance := (Num_Attributes => 1, Attributes => [1 => 1], Class => 0);
       E1, E2, E3 : Boolean := False;
    begin
       Put_Line ("TEST 6 — Invalid Data Integrity Check");
@@ -178,8 +178,8 @@ procedure Tests is
    begin
       Put_Line ("TEST 7 — Gain Ratio edge case (Div by zero avoidance)");
       -- Create a dataset where all instances have the same value for the attribute
-      Data.Append ((Num_Attributes => 1, Attributes => (1 => 5), Class => 0));
-      Data.Append ((Num_Attributes => 1, Attributes => (1 => 5), Class => 1));
+      Data.Append (Instance'(Num_Attributes => 1, Attributes => [1 => 5], Class => 0));
+      Data.Append (Instance'(Num_Attributes => 1, Attributes => [1 => 5], Class => 1));
       
       Gain := Information_Gain (Data, 1);
       Ratio := Gain_Ratio (Data, 1);
@@ -233,7 +233,9 @@ procedure Tests is
       Check ("10.1 Pointer is initially null", T_Mem = null);
       Setup_Dataset (Data, Attrs);
       T_Mem := Build_Tree (Data, Attrs);
+      pragma Warnings (Off, "condition is always True");
       Check ("10.2 Tree successfully allocated", T_Mem /= null);
+      pragma Warnings (On, "condition is always True");
       Free_Tree (T_Mem);
       Check ("10.3 Tree fully deallocated and nullified", T_Mem = null);
    end Test_10_Memory;
@@ -243,7 +245,7 @@ procedure Tests is
       Data  : Dataset;
       Attrs : Attribute_Set;
       T     : Tree;
-      Inst  : constant Instance := (Num_Attributes => 2, Attributes => (1 => 2, 2 => 1), Class => 1);
+      Inst  : constant Instance := (Num_Attributes => 2, Attributes => [1 => 2, 2 => 1], Class => 1);
    begin
       Put_Line ("TEST 11 — Split Criterion: Use_Gain_Ratio variant");
       Setup_Dataset (Data, Attrs);
@@ -259,14 +261,14 @@ procedure Tests is
    procedure Test_12_Invalid_Model is
       Null_T : Tree := null;
       E1     : Boolean := False;
-      Dummy_Inst : constant Instance := (Num_Attributes => 1, Attributes => (1 => 1), Class => 0);
+      Dummy_Inst : constant Instance := (Num_Attributes => 1, Attributes => [1 => 1], Class => 0);
       Leaf_T : Tree := new Tree_Node'(Kind => Leaf, Predicted_Class => 5);
    begin
       Put_Line ("TEST 12 — Invalid Model Evaluation");
       begin
          declare C : Class_ID := Predict (Null_T, Dummy_Inst); begin null; end;
       exception
-         when Prediction_Error | others => E1 := True;
+         when Prediction_Error => E1 := True;
       end;
       Check ("12.1 Predict on null tree raises Prediction_Error", E1);
       Check ("12.2 Predict on pure Leaf succeeds directly", Predict (Leaf_T, Dummy_Inst) = 5);
@@ -281,7 +283,7 @@ procedure Tests is
       Attrs : Attribute_Set;
       T     : Tree;
       E1    : Boolean := False;
-      Bad_Inst : constant Instance := (Num_Attributes => 0, Attributes => (1 .. 0 => 0), Class => 0);
+      Bad_Inst : constant Instance := (Num_Attributes => 0, Attributes => [], Class => 0);
    begin
       Put_Line ("TEST 13 — Prediction Data Constraint Violations");
       Setup_Dataset (Data, Attrs);
@@ -306,9 +308,9 @@ procedure Tests is
       T     : Tree;
    begin
       Put_Line ("TEST 14 — Majority Class Bias Inference");
-      Data.Append ((Num_Attributes => 1, Attributes => (1 => 1), Class => 2));
-      Data.Append ((Num_Attributes => 1, Attributes => (1 => 2), Class => 2));
-      Data.Append ((Num_Attributes => 1, Attributes => (1 => 3), Class => 5));
+      Data.Append (Instance'(Num_Attributes => 1, Attributes => [1 => 1], Class => 2));
+      Data.Append (Instance'(Num_Attributes => 1, Attributes => [1 => 2], Class => 2));
+      Data.Append (Instance'(Num_Attributes => 1, Attributes => [1 => 3], Class => 5));
       -- Class 2 is majority
       
       T := Build_Tree (Data, Attrs); -- empty attrs
