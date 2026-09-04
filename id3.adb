@@ -243,7 +243,7 @@ package body ID3 is
                declare
                   Val   : constant Value_ID := Value_Datasets.Key (C);
                   Sub   : constant Dataset := Value_Datasets.Element (C);
-                  Child : Tree := Build_Tree (Sub, Remaining_Attrs, Criterion);
+                  Child : constant Tree := Build_Tree (Sub, Remaining_Attrs, Criterion);
                begin
                   Node.Branches.Insert (Val, Child);
                end;
