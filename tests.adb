@@ -230,18 +230,19 @@ procedure Tests is
       Attrs : Attribute_Set;
       T_Mem : Tree := null;
       
-      -- Helper function obscures the null-check from local static flow analysis
+      -- Helper functions obscure the null-checks from local static flow analysis
       function Is_Allocated (Node : Tree) return Boolean is (Node /= null);
+      function Is_Null (Node : Tree) return Boolean is (Node = null);
    begin
       Put_Line ("TEST 10 — Memory Management");
-      Check ("10.1 Pointer is initially null", T_Mem = null);
+      Check ("10.1 Pointer is initially null", Is_Null (T_Mem));
       Setup_Dataset (Data, Attrs);
       T_Mem := Build_Tree (Data, Attrs);
       
       Check ("10.2 Tree successfully allocated", Is_Allocated (T_Mem));
       
       Free_Tree (T_Mem);
-      Check ("10.3 Tree fully deallocated and nullified", T_Mem = null);
+      Check ("10.3 Tree fully deallocated and nullified", Is_Null (T_Mem));
    end Test_10_Memory;
 
    -- T11
